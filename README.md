@@ -8,8 +8,6 @@ Minimalne demo stacku do budowania lekkich SaaS-ow w Go:
 - Zog jako walidacja wejscia po stronie serwera.
 - pgx + sqlc + goose jako opcjonalna sciezka Postgres: typowany SQL i migracje.
 
-Demo celowo nie ma Reacta, bundlera frontendu, JSON API ani Firebase SDK. Stan jest na serwerze, a UI jest tylko jego projekcja.
-
 ## Quick Start
 
 ```bash
