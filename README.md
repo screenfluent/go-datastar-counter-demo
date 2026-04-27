@@ -26,24 +26,28 @@ Domyslnie aplikacja uzywa pamieci procesu, zeby jeden obraz Dockerowy dzialal be
 To jest maly, konkretny odpowiednik "Firebase realtime counter", ale bez vendor lock-in i bez przenoszenia logiki biznesowej do przegladarki.
 
 ```text
-Browser A                 Go process                         Browser B
----------                 ----------                         ---------
-click "+"  -- POST -->  Echo handler
-                         Zog validation
-                         Memory/Postgres store
-                         Hub broadcast
-
-open SSE  <-- patch --   templ renders HTML   -- patch -->   open SSE
-DOM update                Datastar SSE event                 DOM update
++----------------+        +---------------------------+        +----------------+
+| Browser A      |        | Go process                |        | Browser B      |
+|                |        |                           |        |                |
+| click "+"      +------->| POST /counter/increment   |        | open SSE       |
+|                |        | Echo handler              |        | GET /events    |
+| open SSE       |        | Zog validation            |        |                |
+| GET /events    |        | Store update              |        |                |
+|                |        | Hub broadcast             |        |                |
+| DOM patch      |<-------+ templ renders #counter    +------->| DOM patch      |
++----------------+        | Datastar SSE event        |        +----------------+
+                          +---------------------------+
 ```
 
 Najwazniejsza idea:
 
 ```text
-state = server
-UI = rendered HTML
-change = POST action
-sync = SSE patch to every connected client
++---------+-------------------------------+
+| state   | server                        |
+| UI      | rendered HTML                 |
+| change  | POST action                   |
+| sync    | SSE patch to every client     |
++---------+-------------------------------+
 ```
 
 ## Jak Dziala Realtime
@@ -72,43 +76,80 @@ Kazdy klient SSE dostaje swoj kanal. Po zmianie licznika `Hub` rozsyla nowy `Sna
 ## Architektura
 
 ```text
-cmd/server
-  main.go              HTTP routes, startup, store selection
-
-internal/counter
-  hub.go               subscriptions, broadcast, realtime fan-out
-  counter.go           shared Snapshot model
-
-internal/store
-  memory.go            default in-memory counter store
-  postgres.go          optional pgx/sqlc-backed store
-
-internal/validate
-  counter.go           Zog validation for counter actions
-
-internal/db
-  *.go                 sqlc-generated typed query layer
-
-views
-  page.templ           templ components for full page and counter card
-
-migrations
-  *.sql                goose migrations
-
-queries
-  counter.sql          source SQL used by sqlc
+.
+|-- cmd/
+|   `-- server/
+|       `-- main.go          HTTP routes, startup, store selection
+|-- internal/
+|   |-- counter/
+|   |   |-- counter.go       shared Snapshot model
+|   |   `-- hub.go           subscriptions, broadcast, realtime fan-out
+|   |-- db/
+|   |   |-- counter.sql.go   sqlc-generated typed counter queries
+|   |   |-- db.go            sqlc DBTX/Queries plumbing
+|   |   `-- models.go        sqlc-generated models
+|   |-- store/
+|   |   |-- memory.go        default in-memory counter store
+|   |   `-- postgres.go      optional pgx/sqlc-backed store
+|   `-- validate/
+|       `-- counter.go       Zog validation for counter actions
+|-- migrations/
+|   `-- *.sql                goose migrations
+|-- queries/
+|   `-- counter.sql          source SQL used by sqlc
+|-- views/
+|   |-- page.templ           templ source components
+|   `-- page_templ.go        generated Go renderer
+|-- static/
+|   `-- app.css              visual layer
+|-- Dockerfile
+|-- Makefile
+|-- go.mod
+|-- go.sum
+`-- sqlc.yaml
 ```
 
 Warstwy:
 
 ```text
-HTTP action
-  -> Echo route
-  -> Zog validation
-  -> Store interface
-  -> Hub broadcast
-  -> templ render
-  -> Datastar SSE patch
++-------------+
+| HTTP action |
++------+------+
+       |
+       v
++-------------+
+| Echo route  |
++------+------+
+       |
+       v
++-------------+
+| Zog         |
+| validation  |
++------+------+
+       |
+       v
++-------------+
+| Store       |
+| interface   |
++------+------+
+       |
+       v
++-------------+
+| Hub         |
+| broadcast   |
++------+------+
+       |
+       v
++-------------+
+| templ       |
+| render      |
++------+------+
+       |
+       v
++-------------+
+| Datastar    |
+| SSE patch   |
++-------------+
 ```
 
 ## Pamiec Procesu vs Postgres
@@ -129,8 +170,12 @@ Ograniczenie: restart kontenera zeruje licznik.
 Jesli ustawisz `DATABASE_URL`, aplikacja wybierze store Postgres:
 
 ```text
-DATABASE_URL set     -> Postgres store
-DATABASE_URL missing -> Memory store
++-----------------------+----------------+
+| DATABASE_URL          | Store          |
++-----------------------+----------------+
+| set                   | Postgres store |
+| missing               | Memory store   |
++-----------------------+----------------+
 ```
 
 Wtedy:
@@ -159,11 +204,13 @@ Przy starcie aplikacja wykonuje migracje z `migrations/` przez goose. Kod w `int
 Dla osoby przyzwyczajonej do Next.js/Firebase najwieksza roznica to miejsce trzymania stanu i ilosc warstw.
 
 ```text
-Next/Firebase style:
-component state -> client SDK -> JSON/data snapshots -> frontend reconciliation
++--------------------+     +------------+     +---------------------+     +-------------------------+
+| component state    | --> | client SDK | --> | JSON/data snapshots | --> | frontend reconciliation |
++--------------------+     +------------+     +---------------------+     +-------------------------+
 
-Go/Datastar style:
-server state -> typed HTML component -> SSE patch -> DOM update
++--------------+     +----------------------+     +-----------+     +------------+
+| server state | --> | typed HTML component | --> | SSE patch | --> | DOM update |
++--------------+     +----------------------+     +-----------+     +------------+
 ```
 
 Co odpada:
