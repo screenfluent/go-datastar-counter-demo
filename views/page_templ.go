@@ -68,7 +68,7 @@ func CounterCard(snapshot counter.Snapshot) templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"counter-card\" class=\"card\"><p class=\"eyebrow\">Go SaaS realtime demo</p><h1>Echo + templ + Datastar</h1><p class=\"subtitle\">Server-rendered HTML patches over SSE, with validation in Go and an optional Postgres path through pgx, sqlc and goose.</p><div class=\"counter\"><button data-on:click=\"@post('/counter/decrement')\">-</button> <span class=\"count\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div id=\"counter-card\" class=\"card\"><p class=\"eyebrow\">Go SaaS realtime demo</p><h1>Echo + templ + Datastar</h1><p class=\"subtitle\">Server-rendered HTML patches over SSE, with validation in Go and durable Postgres state through pgx, sqlc and goose.</p><div class=\"counter\"><button data-on:click=\"@post('/counter/decrement')\">-</button> <span class=\"count\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -81,7 +81,7 @@ func CounterCard(snapshot counter.Snapshot) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</span> <button data-on:click=\"@post('/counter/increment')\">+</button></div><div class=\"links\"><a href=\"https://data-star.dev/\" target=\"_blank\" class=\"link-btn docs\">Datastar</a> <a href=\"https://templ.guide/\" target=\"_blank\" class=\"link-btn github\">templ</a></div><p class=\"info\">Open this page in two tabs. A click in one tab is broadcast to every connected client without React state, Firebase SDKs or a JSON API.</p><p class=\"edit-hint\">Live store: <code>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</span> <button data-on:click=\"@post('/counter/increment')\">+</button></div><div class=\"links\"><a href=\"https://data-star.dev/\" target=\"_blank\" class=\"link-btn docs\">Datastar</a> <a href=\"https://templ.guide/\" target=\"_blank\" class=\"link-btn github\">templ</a></div><p class=\"info\">Open this page in two tabs. A click in one tab is broadcast to every connected client without React state, Firebase SDKs or a JSON API.</p><p class=\"edit-hint\">Persistent store: <code>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

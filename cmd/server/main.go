@@ -137,8 +137,7 @@ func rawResponseWriter(w http.ResponseWriter) http.ResponseWriter {
 func openStore(ctx context.Context) (counter.Store, func(), error) {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		slog.Info("DATABASE_URL not set, using in-memory store")
-		return store.NewMemory(), func() {}, nil
+		return nil, nil, errors.New("DATABASE_URL is required")
 	}
 
 	config, err := pgxpool.ParseConfig(dsn)
